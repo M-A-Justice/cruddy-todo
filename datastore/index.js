@@ -12,11 +12,11 @@ var items = {};
 exports.create = (text, callback) => {
 // writeFile takes filepath and getNextUniqueId
   counter.getNextUniqueId((err, fileData) => {
-    fs.writeFile(`./datastore/data/${fileData}.txt`, text, (err) => {
+    fs.writeFile(path.join(exports.dataDir, `${fileData}.txt`), text, (err) => {
       if (err) {
         throw ('error writing data');
       } else {
-        callback(null, text);
+        callback(null, {id: fileData, text: text});
       }
     });
   });
