@@ -7,10 +7,19 @@ var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
+// items[id] = text;
+// callback(null, { id, text });
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+// writeFile takes filepath and getNextUniqueId
+  counter.getNextUniqueId((err, fileData) => {
+    fs.writeFile(`./datastore/data/${fileData}.txt`, text, (err) => {
+      if (err) {
+        throw ('error writing data');
+      } else {
+        callback(null, text);
+      }
+    });
+  });
 };
 
 exports.readAll = (callback) => {
