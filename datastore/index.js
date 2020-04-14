@@ -14,7 +14,7 @@ exports.create = (text, callback) => {
   counter.getNextUniqueId((err, id) => {
     fs.writeFile(path.join(exports.dataDir, `${id}.txt`), text, (err) => {
       if (err) {
-        throw ('error writing data');
+        callback(new Error('error writing data'));
       } else {
         callback(null, {id, text});
       }
@@ -27,7 +27,7 @@ exports.readAll = (callback) => {
   // callback that takes in an error and the file data
   fs.readdir(exports.dataDir, (err, items) => {
     if (err) {
-      throw ('could not read directory');
+      callback(new Error('could not read directory'));
     } else {
       let data = _.map(items, (text, id) => {
         return { id: text.split('.')[0], text: text.split('.')[0] };
@@ -46,7 +46,7 @@ exports.readOne = (id, callback) => {
   // }
   fs.readFile(path.join(exports.dataDir, `${id}.txt`), (err, data) => {
     if (err) {
-      callback(new Error('cannot read file with this id'));
+      callback(new Error(`cannot read file with this id: ${id}`));
     } else {
       callback(null, {id: id, text: data.toString()});
     }
@@ -54,24 +54,47 @@ exports.readOne = (id, callback) => {
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  // var item = items[id];
+  // if (!item) {
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   items[id] = text;
+  //   callback(null, { id, text });
+  // }
+  //handle if file doesnt exist do not create it
+  //write to the file takes path.join
+  //fs.access
+  fs.access(path.join(exports.dataDir, `${id}.txt`), (err) => {
+    if (err) {
+      callback(new Error(`file does nor exist: ${err}`));
+    } else {
+      fs.writeFile(path.join(exports.dataDir, `${id}.txt`), text, (err) => {
+        if (err) {
+          callback(new Error(`could not write/update file at this id: ${id}`));
+        } else {
+          callback(null, {id, text});
+        }
+      });
+    }
+  });
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  // var item = items[id];
+  // delete items[id];
+  // if (!item) {
+  //   // report an error if item not found
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   callback();
+  // }
+  fs.unlink(path.join(exports.dataDir, `${id}.txt`), (err) => {
+    if (err) {
+      callback(new Error(`no file with id: ${id}`));
+    } else {
+      callback();
+    }
+  });
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
