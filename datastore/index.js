@@ -11,31 +11,46 @@ var items = {};
 // callback(null, { id, text });
 exports.create = (text, callback) => {
 // writeFile takes filepath and getNextUniqueId
-  counter.getNextUniqueId((err, fileData) => {
-    fs.writeFile(path.join(exports.dataDir, `${fileData}.txt`), text, (err) => {
+  counter.getNextUniqueId((err, id) => {
+    fs.writeFile(path.join(exports.dataDir, `${id}.txt`), text, (err) => {
       if (err) {
         throw ('error writing data');
       } else {
-        callback(null, {id: fileData, text: text});
+        callback(null, {id, text});
       }
     });
   });
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
+  //use file systems readdir and pass in exports dataDir and a
+  // callback that takes in an error and the file data
+  fs.readdir(exports.dataDir, (err, items) => {
+    if (err) {
+      throw ('could not read directory');
+    } else {
+      let data = _.map(items, (text, id) => {
+        return { id: text.split('.')[0], text: text.split('.')[0] };
+      });
+      callback(null, data);
+    }
   });
-  callback(null, data);
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  // var text = items[id];
+  // if (!text) {
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   callback(null, { id, text });
+  // }
+  fs.readFile(path.join(exports.dataDir, `${id}.txt`), (err, data) => {
+    if (err) {
+      callback(new Error('cannot read file with this id'));
+    } else {
+      callback(null, {id: id, text: data.toString()});
+    }
+  });
 };
 
 exports.update = (id, text, callback) => {
