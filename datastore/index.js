@@ -27,18 +27,22 @@ exports.create = (text, callback) => {
 exports.readAll = (callback) => {
   //use file systems readdir and pass in exports dataDir and a
   // callback that takes in an error and the file data
-  fs.readdir(exports.dataDir, (err, items) => {
+  fs.readdir(exports.dataDir, (err, files) => {
     if (err) {
       callback(new Error('could not read directory'));
-    } else {
-      let data = _.map(items, (text, id) => {
-        return filePromise(path.join(exports.dataDir, file)).then(fileContent => {
-          return { id: id, text: text };
-        })
-      });
     }
+    let data = _.map(files, (file) => {
+      let id = path.basename(file, '.txt');
+      let filepath = path.join(exports.dataDir, file);
+      return filePromise(filepath).then(fileData => {
+        return {
+          id: id,
+          text: fileData.toString()
+        };
+      });
+    });
     Promise.all(data)
-    .then(items => callback(null, items), err => callback(err))
+      .then(items => callback(null, items), err => callback(err));
   });
 };
 
