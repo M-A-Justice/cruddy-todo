@@ -2,8 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
 
 var items = {};
+const filePromise = Promise.promisify(fs.readFile);
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
@@ -30,10 +32,13 @@ exports.readAll = (callback) => {
       callback(new Error('could not read directory'));
     } else {
       let data = _.map(items, (text, id) => {
-        return { id: text.split('.')[0], text: text.split('.')[0] };
+        return filePromise(path.join(exports.dataDir, file)).then(fileContent => {
+          return { id: id, text: text };
+        })
       });
-      callback(null, data);
     }
+    Promise.all(data)
+    .then(items => callback(null, items), err => callback(err))
   });
 };
 
